@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${PP_OWNERS:?Définis PP_OWNERS (ton login Trackmania, séparés par des virgules)}"
+# Propriétaire(s) PyPlanet (logins séparés par des virgules). Par défaut : Teilen.
+export PP_OWNERS="${PP_OWNERS:-Teilen}"
 
 # Mode LAN (option /lan du serveur, sans compte masterserver) :
 #  - TM_LAN=1 force le mode LAN, TM_LAN=0 force le mode en ligne ;
