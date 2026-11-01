@@ -19,7 +19,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      mariadb-server supervisor ca-certificates wget unzip tzdata \
+      mariadb-server supervisor openssh-server ca-certificates wget unzip tzdata \
  && rm -rf /var/lib/apt/lists/*
 
 RUN useradd --system --home-dir /opt/trackmania --shell /usr/sbin/nologin tm
@@ -41,11 +41,16 @@ RUN mkdir -p ${TM_DIR} \
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY configure.py  /usr/local/bin/configure.py
 COPY bootstrap_maps.py /usr/local/bin/bootstrap_maps.py
-COPY supervisord.conf /etc/supervisor/tm.conf
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Chemin par défaut de supervisord : `supervisorctl` fonctionne ainsi sans option -c
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY run-sshd.sh /usr/local/bin/run-sshd.sh
+# pam_loginuid échoue dans un LXC non privilégié et bloque la connexion SSH : on le rend optionnel
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/run-sshd.sh \
+ && sed -i 's/^session\s\+required\s\+pam_loginuid.so/session optional pam_loginuid.so/' /etc/pam.d/sshd
 
-# 2350 : jeu (TCP+UDP) ; 3450 : P2P. XML-RPC (5000) et MariaDB (3306) restent internes.
-EXPOSE 2350/tcp 2350/udp 3450/tcp 3450/udp
+# 2350 : jeu (TCP+UDP) ; 3450 : P2P ; 22 : SSH par clé (actif seulement si une clé est fournie).
+# XML-RPC (5000) et MariaDB (3306) restent internes.
+EXPOSE 2350/tcp 2350/udp 3450/tcp 3450/udp 22/tcp
 
 # Tout l'état persistant (maps, config, base de données, secrets) vit ici.
 VOLUME ["/data"]
