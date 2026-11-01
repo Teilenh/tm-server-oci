@@ -40,6 +40,7 @@ RUN mkdir -p ${TM_DIR} \
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY configure.py  /usr/local/bin/configure.py
+COPY bootstrap_maps.py /usr/local/bin/bootstrap_maps.py
 COPY supervisord.conf /etc/supervisor/tm.conf
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
