@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Propriétaire(s) PyPlanet (logins séparés par des virgules). Par défaut : Teilen.
-export PP_OWNERS="${PP_OWNERS:-Teilen}"
+export PP_OWNERS="${PP_OWNERS:-Teilen_}"
 
 # Mode LAN (option /lan du serveur, sans compte masterserver) :
 #  - TM_LAN=1 force le mode LAN, TM_LAN=0 force le mode en ligne ;
