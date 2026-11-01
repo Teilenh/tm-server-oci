@@ -84,7 +84,9 @@ mariadb-admin --socket="$SOCK" shutdown
 wait "$init_pid" || true
 
 # --- Projet PyPlanet : créé au premier lancement, réglages générés une seule fois ---
-if [ ! -f "$DATA/pyplanet/manage.py" ]; then
+# Tant que le marqueur .settings_v2 est absent, on repart du modèle propre de PyPlanet,
+# puis configure.py y ajoute nos réglages (et crée le marqueur).
+if [ ! -f "$DATA/pyplanet/.settings_v2" ]; then
   tmp="$(mktemp -d)"
   (cd "$tmp" && pyplanet init_project proj)
   cp -a "$tmp/proj/." "$DATA/pyplanet/"
