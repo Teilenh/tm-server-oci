@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${TM_MASTER_LOGIN:?Définis TM_MASTER_LOGIN (login du compte serveur dédié Trackmania)}"
-: "${TM_MASTER_PASSWORD:?Définis TM_MASTER_PASSWORD}"
-: "${PP_OWNERS:?Définis PP_OWNERS (ton login Ubisoft/Trackmania, séparés par des virgules)}"
+: "${PP_OWNERS:?Définis PP_OWNERS (ton login Trackmania, séparés par des virgules)}"
+
+# Mode LAN (option /lan du serveur, sans compte masterserver) :
+#  - TM_LAN=1 force le mode LAN, TM_LAN=0 force le mode en ligne ;
+#  - non défini : LAN si TM_MASTER_LOGIN est absent, en ligne sinon.
+if [ -z "${TM_LAN:-}" ]; then
+  if [ -n "${TM_MASTER_LOGIN:-}" ]; then TM_LAN=0; else TM_LAN=1; fi
+fi
+if [ "$TM_LAN" != "1" ]; then
+  : "${TM_MASTER_LOGIN:?Mode en ligne : définis TM_MASTER_LOGIN (compte serveur dédié) ou utilise TM_LAN=1}"
+  : "${TM_MASTER_PASSWORD:?Mode en ligne : définis TM_MASTER_PASSWORD}"
+fi
+export TM_LAN
+if [ "$TM_LAN" = "1" ]; then export TM_LAN_ARGS="/lan"; else export TM_LAN_ARGS=""; fi
+export TM_EXTRA_ARGS="${TM_EXTRA_ARGS:-}"   # options supplémentaires passées au serveur
 
 DATA="${DATA_DIR:-/data}"
 TM="${TM_DIR:-/opt/trackmania}"
@@ -29,9 +41,13 @@ if [ ! -e "$DATA/UserData/.initialized" ]; then
 fi
 ln -sfn "$DATA/UserData" "$TM/UserData"
 
-# Liste de maps par défaut si aucune n'existe
+# Liste de maps par défaut si aucune n'existe : on télécharge les Weekly Shorts (comme ton
+# setup_server.py) et on génère tracklist.txt ; repli sur l'exemple du serveur si ça échoue.
 MS="$DATA/UserData/Maps/MatchSettings"
 mkdir -p "$MS"
+if [ ! -e "$MS/tracklist.txt" ]; then
+  python3 /usr/local/bin/bootstrap_maps.py "$DATA/UserData" || true
+fi
 if [ ! -e "$MS/tracklist.txt" ] && [ -e "$MS/example.txt" ]; then
   cp "$MS/example.txt" "$MS/tracklist.txt"
 fi
