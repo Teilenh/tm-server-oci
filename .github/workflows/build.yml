@@ -9,6 +9,8 @@ on:
       - configure.py
       - bootstrap_maps.py
       - supervisord.conf
+      - run-sshd.sh
+      - tm-passwd
       - .github/workflows/build.yml
   # Rebuild hebdomadaire : le zip du serveur Nadeo est téléchargé au build,
   # donc ça récupère la dernière version (le serveur doit être à jour pour accepter les joueurs).
