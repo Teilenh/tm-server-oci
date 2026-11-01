@@ -75,12 +75,10 @@ def configure_dedicated():
     tree.write(CFG, encoding="utf-8", xml_declaration=True)
 
 
-PYPLANET_SETTINGS = '''# Fichier généré au premier lancement par configure.py. Tu peux le modifier librement :
-# il ne sera plus réécrit (supprime .settings_generated pour le régénérer).
-# Clés selon la doc PyPlanet : vérifie-les si ta version diffère.
-import os
+PYPLANET_SETTINGS = '''
 
-DEBUG = False
+# --- Ajouté par configure.py (tm-aio) : remplace les valeurs du modèle ci-dessus. ---
+# Modifiable librement. Supprime .settings_v2 pour régénérer tout le projet.
 
 DATABASES = {{
     'default': {{
@@ -115,7 +113,7 @@ OWNERS = {{
 
 def configure_pyplanet():
     base = os.path.join(DATA, "pyplanet")
-    marker = os.path.join(base, ".settings_generated")
+    marker = os.path.join(base, ".settings_v2")
     if os.path.exists(marker):
         return
     owners = [o.strip() for o in os.environ["PP_OWNERS"].split(",") if o.strip()]
@@ -124,7 +122,8 @@ def configure_pyplanet():
         xmlrpc_password=os.environ["XMLRPC_PASSWORD"],
         owners=owners,
     )
-    with open(os.path.join(base, "settings", "base.py"), "w", encoding="utf-8") as f:
+    # On AJOUTE à la fin du modèle généré par `pyplanet init_project` (il contient TMP_PATH, STORAGE…)
+    with open(os.path.join(base, "settings", "base.py"), "a", encoding="utf-8") as f:
         f.write(content)
     open(marker, "w").close()
 
