@@ -1,0 +1,58 @@
+name: Build et push de l'image tm-aio
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Containerfile
+      - entrypoint.sh
+      - configure.py
+      - supervisord.conf
+      - .github/workflows/build.yml
+  # Rebuild hebdomadaire : le zip du serveur Nadeo est téléchargé au build,
+  # donc ça récupère la dernière version (le serveur doit être à jour pour accepter les joueurs).
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: tm-aio
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # GHCR exige un chemin en minuscules
+      - name: Préparer les noms
+        id: meta
+        run: |
+          echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
+      # Buildah/Podman sont préinstallés sur les runners ubuntu : pas de Docker ici.
+      - name: Build (OCI)
+        id: build
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: latest ${{ steps.meta.outputs.date }} ${{ github.sha }}
+          containerfiles: ./Containerfile
+          context: .
+          oci: true
+          platforms: linux/amd64
+
+      - name: Push vers GHCR
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build.outputs.image }}
+          tags: ${{ steps.build.outputs.tags }}
+          registry: ${{ steps.meta.outputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
