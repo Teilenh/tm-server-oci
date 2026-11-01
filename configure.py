@@ -33,8 +33,12 @@ def configure_dedicated():
     tree = ET.parse(CFG)
     root = tree.getroot()
 
-    set_text(root, "masterserver_account/login", os.environ["TM_MASTER_LOGIN"])
-    set_text(root, "masterserver_account/password", os.environ["TM_MASTER_PASSWORD"])
+    # Identifiants masterserver : seulement en mode en ligne (en mode /lan, on ne les touche pas)
+    if os.environ.get("TM_MASTER_LOGIN"):
+        set_text(root, "masterserver_account/login", os.environ["TM_MASTER_LOGIN"])
+        set_text(root, "masterserver_account/password", os.environ.get("TM_MASTER_PASSWORD", ""))
+    if os.environ.get("TM_LAN") == "1":
+        set_text(root, "server_options/ladder_mode", "inactive")
     set_text(root, "server_options/max_players", os.environ.get("TM_MAX_PLAYERS", "10"))
 
     optional = {
@@ -53,6 +57,7 @@ def configure_dedicated():
     set_text(root, "system_config/server_p2p_port", "3450")
     set_text(root, "system_config/xmlrpc_port", "5000")
     set_text(root, "system_config/xmlrpc_allowremote", "False")
+    set_text(root, "system_config/bind_ip_address", "0.0.0.0")
 
     # Mot de passe SuperAdmin (utilisé par PyPlanet via XML-RPC)
     for level in root.findall("authorization_levels/level"):
