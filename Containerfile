@@ -43,8 +43,8 @@ COPY configure.py  /usr/local/bin/configure.py
 COPY bootstrap_maps.py /usr/local/bin/bootstrap_maps.py
 # Chemin par défaut de supervisord : `supervisorctl` fonctionne ainsi sans option -c
 COPY supervisord.conf /etc/supervisor/supervisord.conf
-COPY run_sshd.sh /usr/local/bin/run-sshd.sh
-COPY tm_passwd /usr/local/bin/tm-passwd
+COPY run-sshd.sh /usr/local/bin/run-sshd.sh
+COPY tm-passwd.sh /usr/local/bin/tm-passwd
 # pam_loginuid échoue dans un LXC non privilégié et bloque la connexion SSH : on le rend optionnel
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/run-sshd.sh /usr/local/bin/tm-passwd \
  && sed -i 's/^session\s\+required\s\+pam_loginuid.so/session optional pam_loginuid.so/' /etc/pam.d/sshd
