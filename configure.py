@@ -52,6 +52,11 @@ def configure_dedicated():
         if os.environ.get(env):
             set_text(root, path, os.environ[env])
 
+    # Le serveur refuse de démarrer sans nom : valeur par défaut si rien n'est défini
+    name_node = root.find("server_options/name")
+    if name_node is None or not (name_node.text or "").strip():
+        set_text(root, "server_options/name", "Serveur Trackmania AIO")
+
     # Ports : jeu 2350, P2P 3450, XML-RPC 5000 (local uniquement, le contrôleur est dans le même conteneur)
     set_text(root, "system_config/server_port", "2350")
     set_text(root, "system_config/server_p2p_port", "3450")
