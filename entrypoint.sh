@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Propriétaire(s) PyPlanet (logins séparés par des virgules). Par défaut : Teilen.
-export PP_OWNERS="${PP_OWNERS:-Teilen_}"
+# Propriétaire(s) PyPlanet (logins séparés par des virgules). Pseudo en jeu : Teilen_.
+export PP_OWNERS="${PP_OWNERS:-Zu6CMuX5SkWlrdVjBph28A}"
 
 # Mode LAN (option /lan du serveur, sans compte masterserver) :
 #  - TM_LAN=1 force le mode LAN, TM_LAN=0 force le mode en ligne ;

@@ -24,7 +24,7 @@ ou le VPN.
 ## Réglages par défaut
 
 - **Mode LAN** (`/lan`) : aucun compte serveur Trackmania requis.
-- **Propriétaire PyPlanet** : `Teilen`.
+- **Propriétaire PyPlanet** : login `Zu6CMuX5SkWlrdVjBph28A` (pseudo en jeu : `Teilen_`).
 - **10 joueurs** maximum.
 - **Maps** : au premier lancement, les Weekly Shorts du moment sont téléchargées et mises en rotation
   (Time Attack, 10 minutes par map).
@@ -38,7 +38,7 @@ Variables d'environnement du conteneur (à définir dans les options du CT, selo
 
 | Variable | Rôle |
 |---|---|
-| `PP_OWNERS` | Login(s) propriétaires PyPlanet, séparés par des virgules (défaut : `Teilen`) |
+| `PP_OWNERS` | Login(s) propriétaires PyPlanet, séparés par des virgules (défaut : `Zu6CMuX5SkWlrdVjBph28A`) |
 | `TM_SERVER_NAME` | Nom du serveur |
 | `TM_MAX_PLAYERS` | Nombre de joueurs (défaut : 10) |
 | `TM_PASSWORD`, `TM_SPECTATOR_PASSWORD` | Mots de passe joueurs / spectateurs |
@@ -57,6 +57,9 @@ Contenu de `/data` :
 Si je ne suis pas admin dans le jeu : PyPlanet identifie les propriétaires par **login**, pas par pseudo.
 Relever le login dans les logs à la connexion, puis le mettre dans `OWNERS` de
 `/data/pyplanet/settings/base.py`.
+Pour Teilen_, la valeur est `OWNERS = {'default': ['Zu6CMuX5SkWlrdVjBph28A']}`,
+sans l'adresse IP ni le port. Sur une installation existante, modifier cette valeur puis redémarrer
+le conteneur : les réglages PyPlanet ne sont générés qu'au premier lancement.
 
 ## Construire / tester soi-même
 

@@ -49,7 +49,7 @@ def pyplanet(data):
     if marker.exists():
         return
     settings = {
-        'OWNERS': {'default': [login.strip() for login in os.environ.get('PP_OWNERS', 'Teilen_').split(',') if login.strip()]},
+        'OWNERS': {'default': [login.strip() for login in os.environ.get('PP_OWNERS', 'Zu6CMuX5SkWlrdVjBph28A').split(',') if login.strip()]},
         'SELF_UPGRADE': False,
         'DATABASES': {'default': {
             'ENGINE': 'peewee_async.MySQLDatabase',
