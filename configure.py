@@ -1,138 +1,59 @@
-#!/usr/bin/env python3
-"""Génère/ajuste dedicated_cfg.txt et les réglages PyPlanet à partir des variables d'environnement.
+[supervisord]
+nodaemon=true
+user=root
+logfile=/dev/null
+logfile_maxbytes=0
+pidfile=/run/supervisord.pid
 
-Usage : configure.py dedicated | pyplanet
-Les valeurs sont appliquées à chaque démarrage pour dedicated_cfg.txt (seules les variables
-définies écrasent le fichier). Les réglages PyPlanet ne sont générés qu'une fois.
-"""
-import os
-import sys
-import shutil
-import xml.etree.ElementTree as ET
+; Permet `supervisorctl status|restart <service>` depuis l'intérieur du conteneur
+[unix_http_server]
+file=/run/supervisor.sock
+chmod=0700
 
-DATA = os.environ.get("DATA_DIR", "/data")
-CFG_DIR = os.path.join(DATA, "UserData", "Config")
-CFG = os.path.join(CFG_DIR, "dedicated_cfg.txt")
-CFG_DEFAULT = os.path.join(CFG_DIR, "dedicated_cfg.default.txt")
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
+[supervisorctl]
+serverurl=unix:///run/supervisor.sock
 
-def set_text(root, path, value):
-    """Met à jour (ou crée) un élément XML via un chemin 'a/b/c'."""
-    node = root
-    for part in path.split("/"):
-        child = node.find(part)
-        if child is None:
-            child = ET.SubElement(node, part)
-        node = child
-    node.text = str(value)
+; SSH : se coupe proprement (code 0, sans redémarrage) si aucune clé n'est fournie
+[program:sshd]
+command=/usr/local/bin/run-sshd.sh
+priority=5
+startsecs=0
+autorestart=unexpected
+exitcodes=0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+redirect_stderr=true
 
+[program:mariadb]
+command=/usr/sbin/mariadbd --user=mysql --datadir=/data/mysql --bind-address=127.0.0.1 --skip-name-resolve
+priority=10
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+redirect_stderr=true
 
-def configure_dedicated():
-    if not os.path.exists(CFG):
-        shutil.copy(CFG_DEFAULT, CFG)
-    tree = ET.parse(CFG)
-    root = tree.getroot()
+[program:trackmania]
+command=/opt/trackmania/TrackmaniaServer %(ENV_TM_LAN_ARGS)s /nodaemon /bindip=0.0.0.0 /dedicated_cfg=dedicated_cfg.txt /game_settings=MatchSettings/tracklist.txt %(ENV_TM_EXTRA_ARGS)s
+directory=/opt/trackmania
+user=tm
+priority=20
+autorestart=true
+stopsignal=INT
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+redirect_stderr=true
 
-    # Identifiants masterserver : seulement en mode en ligne (en mode /lan, on ne les touche pas)
-    if os.environ.get("TM_MASTER_LOGIN"):
-        set_text(root, "masterserver_account/login", os.environ["TM_MASTER_LOGIN"])
-        set_text(root, "masterserver_account/password", os.environ.get("TM_MASTER_PASSWORD", ""))
-    if os.environ.get("TM_LAN") == "1":
-        set_text(root, "server_options/ladder_mode", "inactive")
-    set_text(root, "server_options/max_players", os.environ.get("TM_MAX_PLAYERS", "10"))
-
-    optional = {
-        "TM_SERVER_NAME": "server_options/name",
-        "TM_SERVER_COMMENT": "server_options/comment",
-        "TM_PASSWORD": "server_options/password",
-        "TM_SPECTATOR_PASSWORD": "server_options/password_spectator",
-        "TM_FORCE_IP": "system_config/force_ip_address",
-    }
-    for env, path in optional.items():
-        if os.environ.get(env):
-            set_text(root, path, os.environ[env])
-
-    # Le serveur refuse de démarrer sans nom : valeur par défaut si rien n'est défini
-    name_node = root.find("server_options/name")
-    if name_node is None or not (name_node.text or "").strip():
-        set_text(root, "server_options/name", "Serveur Trackmania AIO")
-
-    # Ports : jeu 2350, P2P 3450, XML-RPC 5000 (local uniquement, le contrôleur est dans le même conteneur)
-    set_text(root, "system_config/server_port", "2350")
-    set_text(root, "system_config/server_p2p_port", "3450")
-    set_text(root, "system_config/xmlrpc_port", "5000")
-    set_text(root, "system_config/xmlrpc_allowremote", "False")
-    set_text(root, "system_config/bind_ip_address", "0.0.0.0")
-
-    # Mot de passe SuperAdmin (utilisé par PyPlanet via XML-RPC)
-    for level in root.findall("authorization_levels/level"):
-        if (level.findtext("name") or "") == "SuperAdmin":
-            pw = level.find("password")
-            if pw is None:
-                pw = ET.SubElement(level, "password")
-            pw.text = os.environ["XMLRPC_PASSWORD"]
-
-    tree.write(CFG, encoding="utf-8", xml_declaration=True)
-
-
-PYPLANET_SETTINGS = '''
-
-# --- Ajouté par configure.py (tm-aio) : remplace les valeurs du modèle ci-dessus. ---
-# Modifiable librement. Supprime .settings_v2 pour régénérer tout le projet.
-
-DATABASES = {{
-    'default': {{
-        'ENGINE': 'peewee_async.MySQLDatabase',
-        'NAME': 'pyplanet',
-        'OPTIONS': {{
-            'host': '127.0.0.1',
-            'user': 'pyplanet',
-            'password': {db_password!r},
-        }}
-    }},
-}}
-
-DEDICATED = {{
-    'default': {{
-        'HOST': '127.0.0.1',
-        'PORT': 5000,
-        'USER': 'SuperAdmin',
-        'PASSWORD': {xmlrpc_password!r},
-    }},
-}}
-
-MAP_MATCHSETTINGS = {{
-    'default': 'tracklist.txt',
-}}
-
-OWNERS = {{
-    'default': {owners!r},
-}}
-'''
-
-
-def configure_pyplanet():
-    base = os.path.join(DATA, "pyplanet")
-    marker = os.path.join(base, ".settings_v2")
-    if os.path.exists(marker):
-        return
-    owners = [o.strip() for o in os.environ["PP_OWNERS"].split(",") if o.strip()]
-    content = PYPLANET_SETTINGS.format(
-        db_password=os.environ["DB_PASSWORD"],
-        xmlrpc_password=os.environ["XMLRPC_PASSWORD"],
-        owners=owners,
-    )
-    # On AJOUTE à la fin du modèle généré par `pyplanet init_project` (il contient TMP_PATH, STORAGE…)
-    with open(os.path.join(base, "settings", "base.py"), "a", encoding="utf-8") as f:
-        f.write(content)
-    open(marker, "w").close()
-
-
-if __name__ == "__main__":
-    mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    if mode == "dedicated":
-        configure_dedicated()
-    elif mode == "pyplanet":
-        configure_pyplanet()
-    else:
-        sys.exit("usage: configure.py dedicated|pyplanet")
+; PyPlanet attend que le serveur (XML-RPC :5000) et MariaDB (:3306) répondent
+[program:pyplanet]
+command=/bin/bash -c 'until (echo > /dev/tcp/127.0.0.1/5000) 2>/dev/null; do sleep 2; done; until (echo > /dev/tcp/127.0.0.1/3306) 2>/dev/null; do sleep 2; done; exec python manage.py start --pool default'
+directory=/data/pyplanet
+user=tm
+priority=30
+autorestart=true
+startsecs=10
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+redirect_stderr=true
