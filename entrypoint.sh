@@ -96,4 +96,4 @@ python3 /usr/local/bin/configure.py pyplanet
 
 chown -R tm:tm "$DATA/UserData" "$DATA/pyplanet"
 
-exec /usr/bin/supervisord -n -c /etc/supervisor/tm.conf
+exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
