@@ -7,7 +7,8 @@ Base Debian bookworm (glibc native). Non testé : voir « À vérifier » en bas
 
     podman build -t localhost/tm-aio:latest -f Containerfile .
 
-Options : `--build-arg PYTHON_TAG=3.9-slim-bookworm`, `--build-arg PYPLANET_SPEC="pyplanet==x.y.z"`.
+Options : `--build-arg PYTHON_TAG=3.8-slim-bookworm` (défaut : 3.9, PyPlanet ne s'installe pas en 3.10+),
+`--build-arg PYPLANET_SPEC="pyplanet==x.y.z"`.
 Le serveur Nadeo est téléchargé au build : reconstruis l'image pour le mettre à jour.
 
 ## Lancer avec Podman
@@ -57,9 +58,8 @@ Prévois 2 vCPU, 2 Go de RAM, 15–20 Go de disque. Redirige 2350 (TCP+UDP) vers
 
 ## À vérifier au premier lancement (non testé ici)
 
-- Compatibilité de la version de PyPlanet avec le Python choisi (`PYTHON_TAG`).
+- Compatibilité de PyPlanet avec Python 3.9 (3.8 en repli via `PYTHON_TAG`).
 - Noms des clés de `settings/base.py` PyPlanet selon ta version.
 - Noms des éléments XML de `dedicated_cfg.default.txt` (`configure.py` crée les éléments manquants).
 - Option `/nodaemon` du serveur et mode de jeu de `tracklist.txt`.
 - Adresse du zip serveur (`SERVER_ZIP`) toujours valide.
-# tm-server-oci
