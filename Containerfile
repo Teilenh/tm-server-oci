@@ -2,10 +2,10 @@
 # Build : podman build -t localhost/tm-aio:latest -f Containerfile .
 #
 # Base Debian (glibc native) : pas besoin de couche de compatibilité glibc comme sur Alpine.
-# PyPlanet fige d'anciennes dépendances (peewee==2.10.2) qui font `from collections import Callable`,
-# supprimé en Python 3.10 : il faut Python <= 3.9. Si 3.9 pose encore problème, essaie 3.8
-# (--build-arg PYTHON_TAG=3.8-slim-bookworm), qui correspond aux classifiers de PyPlanet.
-ARG PYTHON_TAG=3.9-slim-bookworm
+# PyPlanet fige d'anciennes dépendances qui ne tournent pas au-delà de Python 3.8 :
+#  - peewee==2.10.2 fait `from collections import Callable` (supprimé en 3.10) ;
+#  - peewee-async==0.5.12 appelle asyncio.Task.current_task (supprimé en 3.9).
+ARG PYTHON_TAG=3.8-slim-bookworm
 FROM docker.io/library/python:${PYTHON_TAG}
 
 ARG SERVER_ZIP=http://files.v04.maniaplanet.com/server/TrackmaniaServer_Latest.zip
