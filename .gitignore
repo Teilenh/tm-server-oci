@@ -1,0 +1,16 @@
+# Fichiers locaux / secrets : ne jamais publier
+*.env
+tm.env
+secrets.json
+connection.json
+
+# Serveur de test local (binaire Nadeo, maps, logs, PID)
+runtime/
+maps.json
+server.pid
+server.log
+events.log
+
+# Python
+__pycache__/
+*.pyc
