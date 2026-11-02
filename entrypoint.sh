@@ -47,7 +47,7 @@ ln -sfn "$DATA/UserData" "$TM/UserData"
 MS="$DATA/UserData/Maps/MatchSettings"
 mkdir -p "$MS"
 if [ ! -e "$MS/tracklist.txt" ]; then
-  python3 /usr/local/bin/bootstrap-maps.py "$DATA/UserData" || true
+  python3 /usr/local/bin/bootstrap_maps.py "$DATA/UserData" || true
 fi
 if [ ! -e "$MS/tracklist.txt" ] && [ -e "$MS/example.txt" ]; then
   cp "$MS/example.txt" "$MS/tracklist.txt"
