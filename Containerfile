@@ -40,7 +40,7 @@ RUN mkdir -p ${TM_DIR} \
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY configure.py  /usr/local/bin/configure.py
-COPY bootstrap_maps.py /usr/local/bin/bootstrap-maps.py
+COPY bootstrap_maps.py /usr/local/bin/bootstrap_maps.py
 RUN python3 -c 'import ast; from pathlib import Path; [ast.parse(p.read_text(), filename=str(p)) for p in (Path("/usr/local/bin/configure.py"), Path("/usr/local/bin/bootstrap_maps.py"))]'
 # Chemin par défaut de supervisord : `supervisorctl` fonctionne ainsi sans option -c
 COPY supervisord.conf /etc/supervisor/supervisord.conf
